@@ -1,0 +1,12 @@
+{
+  "name": "تسوية بنكية - شركة الصعيد للنقل والسياحة",
+  "short_name": "تسوية بنكية",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0e1e24",
+  "theme_color": "#0e1e24",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

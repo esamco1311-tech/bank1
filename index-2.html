@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0e1e24">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="تسوية بنكية">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>تسوية بنكية | شركة الصعيد للنقل والسياحة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+:root{
+  --bg:#0e1e24;
+  --bg-panel:#122a33;
+  --bg-panel-2:#0c2027;
+  --line:#1f3d47;
+  --line-soft:#17313a;
+  --gold:#c9a24b;
+  --gold-soft:#e6c877;
+  --teal:#3fb6a8;
+  --red:#d9695f;
+  --text:#eaf2f1;
+  --text-dim:#93b0b3;
+  --text-faint:#5f7d81;
+  --debit:#7fb8e0;
+  --credit:#e0a96f;
+  --radius:10px;
+  --mono:'IBM Plex Mono', ui-monospace, monospace;
+  --sans:'Cairo', system-ui, sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:radial-gradient(1200px 800px at 15% -10%, #143039 0%, var(--bg) 55%);
+  color:var(--text);
+  font-family:var(--sans);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+#app{max-width:1180px;margin:0 auto;padding:22px 18px 80px;}
+
+/* header */
+.topbar{
+  display:flex;justify-content:space-between;align-items:flex-start;gap:16px;
+  padding-bottom:18px;margin-bottom:18px;border-bottom:1px solid var(--line);
+  flex-wrap:wrap;
+}
+.brand{display:flex;flex-direction:column;gap:2px;}
+.brand .eyebrow{
+  font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--gold-soft);
+  text-transform:uppercase;
+}
+.brand h1{margin:2px 0 0;font-size:22px;font-weight:800;color:var(--text);}
+.brand .sub{color:var(--text-dim);font-size:13px;margin-top:2px;}
+.period-box{
+  display:flex;gap:8px;align-items:center;background:var(--bg-panel);
+  border:1px solid var(--line);border-radius:var(--radius);padding:8px 10px;
+}
+.period-box select, .period-box input{
+  background:transparent;border:none;color:var(--text);font-family:var(--mono);
+  font-size:13px;outline:none;
+}
+.period-box .lbl{font-size:11px;color:var(--text-faint);}
+
+/* tabs */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;}
+.tab-btn{
+  background:var(--bg-panel);border:1px solid var(--line);color:var(--text-dim);
+  padding:9px 16px;border-radius:999px;font-family:var(--sans);font-size:13.5px;
+  font-weight:600;cursor:pointer;transition:.15s;
+}
+.tab-btn:hover{color:var(--text);border-color:var(--teal);}
+.tab-btn.active{background:var(--teal);color:#062421;border-color:var(--teal);}
+
+.panel{
+  background:linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-panel-2) 100%);
+  border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:18px;
+}
+.panel h2{margin:0 0 4px;font-size:17px;font-weight:700;}
+.panel .desc{color:var(--text-dim);font-size:12.5px;margin:0 0 16px;}
+
+/* forms */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:11.5px;color:var(--text-faint);font-weight:600;}
+.field input, .field select{
+  background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text);
+  border-radius:8px;padding:9px 10px;font-family:var(--sans);font-size:13.5px;outline:none;
+  transition:.15s;
+}
+.field input:focus, .field select:focus{border-color:var(--teal);}
+.field input[type=number]{font-family:var(--mono);}
+.checkline{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text-dim);}
+.checkline input{accent-color:var(--gold);width:15px;height:15px;}
+.btn{
+  border:none;border-radius:8px;padding:10px 18px;font-family:var(--sans);font-weight:700;
+  font-size:13.5px;cursor:pointer;transition:.15s;
+}
+.btn-primary{background:var(--gold);color:#241b04;}
+.btn-primary:hover{background:var(--gold-soft);}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--text-dim);}
+.btn-ghost:hover{color:var(--text);border-color:var(--teal);}
+.btn-danger{background:transparent;border:1px solid #5c2b28;color:var(--red);}
+.btn-danger:hover{background:#2a1412;}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+
+/* tables */
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;margin-top:14px;}
+tr.entry-row td{padding:5px 6px;}
+tr.entry-row input, tr.entry-row select{
+  width:100%;background:var(--bg-panel-2);border:1px solid var(--line);color:var(--text);
+  border-radius:6px;padding:6px 7px;font-family:var(--sans);font-size:12.5px;outline:none;
+}
+tr.entry-row input[type=number], tr.entry-row input[type=date]{font-family:var(--mono);}
+tr.entry-row input:focus, tr.entry-row select:focus{border-color:var(--teal);}
+tr.entry-row .we-remove-row{padding:2px 5px;}
+tr.entry-row .we-confirm-row{padding:2px 5px; font-weight:800;}
+table{width:100%;border-collapse:collapse;font-size:12.8px;min-width:640px;}
+thead th{
+  background:var(--bg-panel-2);color:var(--gold-soft);font-weight:700;text-align:right;
+  padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap;font-size:12px;
+}
+tbody td{padding:8px 10px;border-bottom:1px solid var(--line-soft);color:var(--text);white-space:nowrap;}
+tbody tr:hover{background:rgba(63,182,168,.06);}
+tbody tr:last-child td{border-bottom:none;}
+.num{font-family:var(--mono);direction:ltr;text-align:left;}
+.tot-row td{font-weight:700;background:rgba(201,162,75,.08);color:var(--gold-soft);}
+.del-btn{background:none;border:none;color:var(--red);cursor:pointer;font-size:15px;padding:2px 6px;}
+.empty-note{padding:18px;text-align:center;color:var(--text-faint);font-size:12.5px;}
+.tag{display:inline-block;font-size:10.5px;padding:2px 7px;border-radius:999px;background:rgba(217,105,95,.15);color:var(--red);font-weight:700;}
+
+/* summary cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:18px;}
+.card{background:var(--bg-panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;}
+.card .k{font-size:11.5px;color:var(--text-faint);margin-bottom:6px;}
+.card .v{font-family:var(--mono);font-size:19px;font-weight:600;color:var(--text);direction:ltr;text-align:right;}
+.card.debit .v{color:var(--debit);}
+.card.credit .v{color:var(--credit);}
+.card.balance .v{color:var(--teal);}
+
+/* ledger / journal statement */
+.stmt{background:#0b1a20;border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:16px;}
+.stmt-head{text-align:center;margin-bottom:14px;}
+.stmt-head .co{font-weight:800;font-size:15px;}
+.stmt-head .sec{font-size:11.5px;color:var(--text-dim);}
+.stmt-head .ttl{font-size:13.5px;color:var(--gold-soft);font-weight:700;margin-top:6px;}
+.jr-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.jr-table th{background:var(--bg-panel-2);padding:7px 8px;border:1px solid var(--line);font-size:11.5px;color:var(--gold-soft);}
+.jr-table td{padding:6px 8px;border:1px solid var(--line-soft);}
+.jr-table td.num{font-family:var(--mono);direction:ltr;text-align:left;}
+.jr-table .indent{padding-right:18px;}
+.jr-table .grand{font-weight:800;background:rgba(201,162,75,.1);}
+.sign-row{display:flex;justify-content:space-between;margin-top:24px;font-size:12px;color:var(--text-dim);flex-wrap:wrap;gap:10px;}
+.sign-row span{border-top:1px solid var(--line);padding-top:6px;min-width:130px;text-align:center;}
+
+.section-divider{margin:26px 0 14px;font-size:13px;font-weight:700;color:var(--gold-soft);display:flex;align-items:center;gap:10px;}
+.section-divider::after{content:'';flex:1;height:1px;background:var(--line);}
+
+@media print{
+  body{background:#fff;color:#000;}
+  .no-print{display:none !important;}
+  #app{max-width:100%;padding:0;}
+  .stmt{background:#fff;border:1px solid #999;color:#000;page-break-inside:avoid;}
+  .stmt-head .co,.stmt-head .ttl{color:#000;}
+  .jr-table th{background:#eee;color:#000;}
+  .jr-table td{color:#000;}
+}
+::placeholder{color:var(--text-faint);}
+::-webkit-scrollbar{height:8px;width:8px;}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+</style>
+</head>
+<body>
+<div id="app">Loading…</div>
+
+<script>
+/* ============================= CONFIG (fixed chart of accounts / branches) ============================= */
+const COMPANY = 'شركة الصعيد للنقل والسياحة';
+const SECTOR = 'القطاع المالى';
+const BANK_NAME = 'بنك القاهرة';
+const ACCOUNT_NO = '15210';
+const SIGNER = 'عصام ابراهيم';
+
+const MONTHS_AR = ['يناير','فبراير','مارس','ابريل','مايو','يونيو','يوليو','اغسطس','سبتمبر','اكتوبر','نوفمبر','ديسمبر'];
+
+const BRANCHES = ['سفاجا','مركز رئيسي 1','مركز رئيسي 2','نجع حمادي','اسكندرية','سوهاج','ملوي','اسنا','حلوان','اسوان','قنا','المنيا','بني سويف','اسيوط','الوادي','م.1','م.4','الفيوم','المنيب','عبود'];
+
+// Withdrawal classification columns (matches "مسحوبات" sheet columns A..O)
+const WITHDRAWAL_ACCOUNTS = [
+  {key:'expenses',          code:'42',     label:'حـ/ المصروفات'},
+  {key:'invest',            code:'1122',   label:'حـ/ الإنفاق الاستثماري'},
+  {key:'prepaid',           code:'1236',   label:'حـ/ مصروفات مدفوعة مقدمًا'},
+  {key:'customers',         code:'123111', label:'حـ/ العملاء'},
+  {key:'other_debtors',     code:'1237',   label:'حـ/ حسابات مدينة أخرى (تأمينات للغير)'},
+  {key:'branch_teller',     code:'193',    label:'حـ/ حسابات جارية بالبنوك — صراف الفروع'},
+  {key:'transfers',         code:'12821',  label:'حـ/ حسابات جارية بالبنوك — تحويلات'},
+  {key:'claims_provision',  code:'3223',   label:'حـ/ مخصص مطالبات ومنازعات'},
+  {key:'holding_co',        code:'324212', label:'حـ/ حسابات دائنة للشركة القابضة (جاري)'},
+  {key:'suppliers_term',    code:'324111', label:'حـ/ الموردين — أجل'},
+  {key:'suppliers_due',     code:'324112', label:'حـ/ الموردين — استحقاق'},
+  {key:'social_insurance',  code:'32434',  label:'حـ/ الهيئة العامة للتأمين الاجتماعي'},
+  {key:'accrued_expenses',  code:'3246',   label:'حـ/ مصروفات مستحقة السداد'},
+  {key:'other_creditors',   code:'329',    label:'حـ/ حسابات دائنة أخرى'},
+];
+const waMap = Object.fromEntries(WITHDRAWAL_ACCOUNTS.map(a=>[a.key,a]));
+
+const DEPOSIT_TYPES = [
+  {key:'branch',            code:'12821',  label:'إيداعات الفروع (تحصيل يومي)'},
+  {key:'collected_cheques', code:'12821',  label:'شيكات محصّلة'},
+  {key:'wages',             code:'412',    label:'حـ/ الأجور'},
+  {key:'other_revenue',     code:'5126',   label:'حـ/ إيرادات وأرباح أخرى'},
+  {key:'customers',         code:'123111', label:'حـ/ العملاء'},
+  {key:'other_debtors',     code:'1237',   label:'حـ/ حسابات مدينة أخرى'},
+  {key:'other_creditors',   code:'329',    label:'حـ/ حسابات دائنة أخرى'},
+  {key:'suspense',          code:'3294',   label:'حـ/ تحت التسوية'},
+];
+const dtMap = Object.fromEntries(DEPOSIT_TYPES.map(a=>[a.key,a]));
+
+/* ============================= STATE ============================= */
+let state = {
+  period: currentPeriodKey(),
+  withdrawals: [],
+  deposits: [],
+  notesDrawn: [],
+  nextChequeNo: '',
+  knownPayees: [],
+  knownStatements: [],
+  loaded:false,
+};
+let activeTab = 'withdrawals';
+let statementLines = []; // transient, not persisted (re-parsed each upload)
+let statementFileName = '';
+
+function currentPeriodKey(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+}
+function periodLabel(key){
+  const [y,m] = key.split('-').map(Number);
+  return MONTHS_AR[m-1] + ' ' + y;
+}
+function uid(){ return 'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function fmt(n){
+  n = Number(n)||0;
+  return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function toNum(v){ const n=parseFloat(v); return isNaN(n)?0:n; }
+
+/* ============================= STORAGE (localStorage — يحفظ على نفس الجهاز/المتصفح) ============================= */
+const LS_PREFIX = 'taswya_bank_15210:'; // بادئة عشان متتلخبطش مع مواقع تانية على نفس الجهاز
+function lsGet(key){
+  try{ const v = localStorage.getItem(LS_PREFIX+key); return v==null? null : v; }catch(e){ return null; }
+}
+function lsSet(key, value){
+  try{ localStorage.setItem(LS_PREFIX+key, value); return true; }catch(e){ console.error('save failed', e); return false; }
+}
+async function loadPeriod(key){
+  try{
+    const raw = lsGet('period:'+key);
+    if(raw){
+      const d = JSON.parse(raw);
+      state.withdrawals = d.withdrawals||[];
+      state.deposits = d.deposits||[];
+      state.notesDrawn = d.notesDrawn||[];
+    } else {
+      state.withdrawals = []; state.deposits = []; state.notesDrawn = [];
+    }
+  }catch(e){
+    state.withdrawals = []; state.deposits = []; state.notesDrawn = [];
+  }
+  state.loaded = true;
+}
+let saveTimer=null;
+function savePeriod(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{
+    lsSet('period:'+state.period, JSON.stringify({
+      withdrawals: state.withdrawals, deposits: state.deposits, notesDrawn: state.notesDrawn
+    }));
+    rememberPeriodInIndex(state.period);
+  }, 250);
+}
+function rememberPeriodInIndex(key){
+  try{
+    let list = [];
+    const raw = lsGet('periods-index');
+    if(raw) list = JSON.parse(raw);
+    if(!list.includes(key)){ list.push(key); list.sort(); }
+    lsSet('periods-index', JSON.stringify(list));
+  }catch(e){}
+}
+function getPeriodsIndex(){
+  try{
+    const raw = lsGet('periods-index');
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return [currentPeriodKey()];
+}
+
+// Global (cross-month) settings: cheque sequence + known payees list
+async function loadGlobals(){
+  state.nextChequeNo = lsGet('cheque-sequence') || '';
+  try{
+    const raw = lsGet('known-payees');
+    state.knownPayees = raw ? JSON.parse(raw) : [];
+  }catch(e){ state.knownPayees = []; }
+  try{
+    const raw = lsGet('known-statements');
+    state.knownStatements = raw ? JSON.parse(raw) : [];
+  }catch(e){ state.knownStatements = []; }
+}
+function saveChequeSequence(nextVal){
+  state.nextChequeNo = nextVal;
+  lsSet('cheque-sequence', String(nextVal));
+}
+function rememberPayee(name){
+  name = (name||'').trim();
+  if(!name) return;
+  if(!state.knownPayees.includes(name)){
+    state.knownPayees.push(name);
+    lsSet('known-payees', JSON.stringify(state.knownPayees));
+  }
+}
+function rememberStatement(name){
+  name = (name||'').trim();
+  if(!name) return;
+  if(!state.knownStatements.includes(name)){
+    state.knownStatements.push(name);
+    lsSet('known-statements', JSON.stringify(state.knownStatements));
+  }
+}
+function bumpChequeSequenceFrom(chequeNo){
+  const digitsOnly = String(chequeNo||'').replace(/\D/g,'');
+  if(digitsOnly.length>=4){ // looks like a real sequential cheque number
+    const nextVal = (BigInt(digitsOnly)+1n).toString();
+    saveChequeSequence(nextVal);
+  }
+}
+
+/* ============================= DERIVED CALCS ============================= */
+function activeWithdrawals(){ return state.withdrawals.filter(w=>!w.deferred); }
+function deferredWithdrawals(){ return state.withdrawals.filter(w=>w.deferred); }
+
+function columnTotals(list){
+  const t = {};
+  WITHDRAWAL_ACCOUNTS.forEach(a=>t[a.key]=0);
+  list.forEach(w=>{ if(t[w.accountKey]!==undefined) t[w.accountKey]+=toNum(w.amount); });
+  return t;
+}
+function sumVals(obj){ return Object.values(obj).reduce((a,b)=>a+b,0); }
+
+function depositTotalsByType(){
+  const t = {};
+  DEPOSIT_TYPES.forEach(d=>t[d.key]=0);
+  state.deposits.forEach(d=>{ if(t[d.type]!==undefined) t[d.type]+=toNum(d.amount); });
+  return t;
+}
+function depositBranchTotals(){
+  const t = {};
+  BRANCHES.forEach(b=>t[b]=0);
+  state.deposits.filter(d=>d.type==='branch').forEach(d=>{ if(t[d.branch]!==undefined) t[d.branch]+=toNum(d.amount); });
+  return t;
+}
+
+/* ============================= RENDER SHELL ============================= */
+async function init(){
+  await loadGlobals();
+  await loadPeriod(state.period);
+  render();
+}
+
+function setTab(t){ activeTab = t; render(); }
+
+async function changePeriod(key){
+  state.period = key;
+  await loadPeriod(key);
+  render();
+}
+
+function render(){
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    ${renderTopbar()}
+    ${renderTabs()}
+    <div id="tab-body">${renderTabBody()}</div>
+  `;
+  bindTopbar();
+  bindTabBody();
+}
+
+function renderTopbar(){
+  return `
+  <div class="topbar no-print">
+    <div class="brand">
+      <div class="eyebrow">دفتر التسوية البنكية</div>
+      <h1>${COMPANY}</h1>
+      <div class="sub">${BANK_NAME} — ح / ${ACCOUNT_NO} &nbsp;·&nbsp; ${SECTOR}</div>
+    </div>
+    <div class="period-box">
+      <span class="lbl">الشهر:</span>
+      <input id="period-input" type="month" value="${state.period}" />
+      <span class="lbl" style="margin-right:6px;">${periodLabel(state.period)}</span>
+    </div>
+  </div>`;
+}
+function bindTopbar(){
+  document.getElementById('period-input').addEventListener('change', e=>{
+    changePeriod(e.target.value);
+  });
+}
+
+const TABS = [
+  {key:'withdrawals', label:'المسحوبات'},
+  {key:'deposits', label:'الإيداعات'},
+  {key:'notes', label:'أوراق الدفع'},
+  {key:'reconcile', label:'مطابقة كشف الحساب'},
+  {key:'report', label:'التقرير الشهري الكامل'},
+  {key:'export', label:'تصدير'},
+];
+function renderTabs(){
+  return `<div class="tabs no-print">${TABS.map(t=>`
+    <button class="tab-btn ${activeTab===t.key?'active':''}" data-tab="${t.key}">${t.label}</button>
+  `).join('')}</div>`;
+}
+
+function renderTabBody(){
+  if(activeTab==='withdrawals') return renderWithdrawalsTab();
+  if(activeTab==='deposits') return renderDepositsTab();
+  if(activeTab==='notes') return renderNotesTab();
+  if(activeTab==='reconcile') return renderReconcileTab();
+  if(activeTab==='report') return renderReportTab();
+  if(activeTab==='export') return renderExportTab();
+  return '';
+}
+function bindTabBody(){
+  document.querySelectorAll('.tab-btn').forEach(b=> b.addEventListener('click', ()=> setTab(b.dataset.tab)));
+  if(activeTab==='withdrawals') bindWithdrawalsTab();
+  if(activeTab==='deposits') bindDepositsTab();
+  if(activeTab==='notes') bindNotesTab();
+  if(activeTab==='reconcile') bindReconcileTab();
+  if(activeTab==='export') bindExportTab();
+}
+
+/* ============================= WITHDRAWALS TAB ============================= */
+function renderWithdrawalsTab(){
+  const net = columnTotals(activeWithdrawals());
+  const gross = columnTotals(state.withdrawals);
+  const totalNet = sumVals(net);
+  const totalGross = sumVals(gross);
+  const deferredTotal = totalGross-totalNet;
+
+  const rows = state.withdrawals.slice().sort((a,b)=> (a.date<b.date?1:-1)).map(w=>`
+    <tr>
+      <td>${w.date||'—'}</td>
+      <td class="num">${w.chequeNo||'—'}</td>
+      <td>${w.payee||'—'}</td>
+      <td>${w.statement||'—'}</td>
+      <td>${waMap[w.accountKey]?waMap[w.accountKey].label:'—'} <span style="color:var(--text-faint);font-family:var(--mono);font-size:11px;">(${waMap[w.accountKey]?waMap[w.accountKey].code:''})</span></td>
+      <td class="num">${fmt(w.amount)}</td>
+      <td>${w.deferred? `<span class="tag">مؤجل${w.deferSub==='due'?' · استحقاق':' · أجل'}</span>` : (w.cleared? `<span class="tag" style="background:rgba(63,182,168,.15);color:var(--teal);">✓ مطابق للكشف</span>` : '—')}</td>
+      <td style="white-space:nowrap;">
+        <button class="del-btn" data-edit="${w.id}" title="تعديل" style="color:var(--teal);">✏️</button>
+        <button class="del-btn" data-del="${w.id}" title="حذف">✕</button>
+      </td>
+    </tr>`).join('');
+
+  return `
+  <div class="panel">
+    <h2>إضافة مسحوبات (شيكات صادرة)</h2>
+    <p class="desc">اكتب أكتر من عملية سحب مرة واحدة، صف لكل شيك. التاريخ بيتحط تلقائي بتاريخ النهارده وتقدر تغيره براحتك. رقم الشيك بيكمل تلقائي من الصف اللي قبله. اسم المستفيد بيتفتكر تلقائيًا (اكتب أول حرفين وهيظهرلك من القائمة). دوس "+ إضافة صف" لو محتاج صفوف أكتر، وفي الآخر دوس "حفظ كل الصفوف".</p>
+    <datalist id="payee-list">${state.knownPayees.map(p=>`<option value="${p.replace(/"/g,'&quot;')}">`).join('')}</datalist>
+    <datalist id="statement-list">${state.knownStatements.map(s=>`<option value="${s.replace(/"/g,'&quot;')}">`).join('')}</datalist>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:11%">التاريخ</th>
+            <th style="width:10%">رقم الشيك</th>
+            <th style="width:14%">لأمر</th>
+            <th style="width:16%">بيان</th>
+            <th style="width:18%">التصنيف المحاسبى</th>
+            <th style="width:11%">المبلغ</th>
+            <th style="width:14%">مؤجل لأوراق الدفع</th>
+            <th style="width:7%"></th>
+          </tr>
+        </thead>
+        <tbody id="w-entry-rows"></tbody>
+      </table>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="w-add-row" type="button">+ إضافة صف</button>
+      <button class="btn btn-primary" id="w-save-all" type="button">💾 حفظ كل الصفوف</button>
+    </div>
+  </div>
+
+  <div class="cards">
+    <div class="card debit"><div class="k">إجمالي المسحوبات (قبل أوراق الدفع)</div><div class="v">${fmt(totalGross)}</div></div>
+    <div class="card"><div class="k">مؤجل لأوراق الدفع</div><div class="v">${fmt(deferredTotal)}</div></div>
+    <div class="card credit"><div class="k">صافي المسحوبات من البنك فعليًا</div><div class="v">${fmt(totalNet)}</div></div>
+  </div>
+
+  <div class="panel">
+    <h2>سجل المسحوبات — ${periodLabel(state.period)}</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>التاريخ</th><th>رقم الشيك</th><th>لأمر</th><th>بيان</th><th>التصنيف</th><th>المبلغ</th><th>ملاحظة</th><th></th></tr></thead>
+      <tbody>${rows || `<tr><td colspan="8" class="empty-note">لسه مفيش مسحوبات مُدخلة</td></tr>`}</tbody>
+    </table></div>
+  </div>
+
+  <div class="panel">
+    <h2>إجمالي المسحوبات لكل حساب</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>الحساب</th><th>الكود</th><th>قبل الأوراق</th><th>مؤجل لأوراق الدفع</th><th>بعد الأوراق (صافي)</th></tr></thead>
+      <tbody>
+      ${WITHDRAWAL_ACCOUNTS.map(a=>`
+        <tr><td>${a.label}</td><td class="num">${a.code}</td><td class="num">${fmt(gross[a.key])}</td><td class="num">${fmt(gross[a.key]-net[a.key])}</td><td class="num">${fmt(net[a.key])}</td></tr>
+      `).join('')}
+      <tr class="tot-row"><td>الإجمالي</td><td></td><td class="num">${fmt(totalGross)}</td><td class="num">${fmt(deferredTotal)}</td><td class="num">${fmt(totalNet)}</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+  `;
+}
+
+function todayISO(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function esc(s){ return String(s==null?'':s).replace(/"/g,'&quot;'); }
+function withdrawalEntryRowHTML(data){
+  data = data || {};
+  const dateVal = data.date || todayISO();
+  const chequeNo = data.chequeNo || '';
+  const payee = esc(data.payee);
+  const statement = esc(data.statement);
+  const accountKey = data.accountKey || '';
+  const amount = (data.amount!=null && data.amount!=='') ? data.amount : '';
+  const deferVal = data.deferSub || (data.deferred ? 'term' : '');
+  return `<tr class="entry-row">
+    <td><input type="date" class="we-date" value="${dateVal}"></td>
+    <td><input type="text" class="we-cheque" placeholder="رقم الشيك" value="${chequeNo}"></td>
+    <td><input type="text" class="we-payee" list="payee-list" placeholder="اسم المستفيد" autocomplete="off" value="${payee}"></td>
+    <td><input type="text" class="we-statement" list="statement-list" placeholder="بيان" autocomplete="off" value="${statement}"></td>
+    <td><select class="we-account">${WITHDRAWAL_ACCOUNTS.map(a=>`<option value="${a.key}" ${a.key===accountKey?'selected':''}>${a.label} (${a.code})</option>`).join('')}</select></td>
+    <td><input type="number" step="0.01" class="we-amount" placeholder="0.00" value="${amount}"></td>
+    <td>
+      <select class="we-defer">
+        <option value="" ${deferVal===''?'selected':''}>لا</option>
+        <option value="term" ${deferVal==='term'?'selected':''}>مؤجل - أجل</option>
+        <option value="due" ${deferVal==='due'?'selected':''}>مؤجل - استحقاق</option>
+      </select>
+    </td>
+    <td style="white-space:nowrap;">
+      <button type="button" class="del-btn we-confirm-row" title="تأكيد والانتقال للشيك اللي بعده" style="color:var(--teal);">✓</button>
+      <button type="button" class="del-btn we-remove-row" title="حذف الصف">✕</button>
+    </td>
+  </tr>`;
+}
+function addWithdrawalEntryRow(){
+  const tbody = document.getElementById('w-entry-rows');
+  if(!tbody) return;
+  const lastCheque = tbody.querySelector('tr.entry-row:last-child .we-cheque');
+  let nextCheque = '';
+  if(lastCheque && lastCheque.value){
+    const digits = lastCheque.value.replace(/\D/g,'');
+    nextCheque = digits.length>=4 ? String(BigInt(digits)+1n) : '';
+  }
+  tbody.insertAdjacentHTML('beforeend', withdrawalEntryRowHTML({chequeNo:nextCheque, date:todayISO()}));
+  bindWithdrawalRowRemove(tbody.lastElementChild);
+}
+function bindChequeCascade(tbody){
+  tbody.addEventListener('input', (e)=>{
+    if(!e.target.classList.contains('we-cheque')) return;
+    const tr = e.target.closest('tr');
+    const next = tr.nextElementSibling;
+    if(!next) return;
+    const nextInput = next.querySelector('.we-cheque');
+    if(!nextInput) return;
+    const digits = e.target.value.replace(/\D/g,'');
+    if(digits.length>=4){
+      nextInput.value = String(BigInt(digits)+1n);
+    }
+  });
+}
+function focusNextRowCheque(tr){
+  let next = tr.nextElementSibling;
+  if(!next || !next.classList.contains('entry-row')){
+    addWithdrawalEntryRow();
+    next = tr.nextElementSibling;
+  }
+  const chequeInput = next && next.querySelector('.we-cheque');
+  if(chequeInput){ chequeInput.focus(); chequeInput.select(); }
+}
+function bindEnterNavigation(tbody){
+  tbody.addEventListener('keydown', (e)=>{
+    if(e.key!=='Enter') return;
+    if(!e.target.matches('input, select')) return;
+    e.preventDefault();
+    const tr = e.target.closest('tr.entry-row');
+    if(tr) focusNextRowCheque(tr);
+  });
+}
+function bindWithdrawalRowRemove(tr){
+  const removeBtn = tr.querySelector('.we-remove-row');
+  removeBtn.addEventListener('click', ()=>{
+    if(document.querySelectorAll('#w-entry-rows tr.entry-row').length<=1){ return; }
+    tr.remove();
+  });
+  const confirmBtn = tr.querySelector('.we-confirm-row');
+  confirmBtn.addEventListener('click', ()=> focusNextRowCheque(tr));
+}
+function bindWithdrawalsTab(){
+  const tbody = document.getElementById('w-entry-rows');
+  const startRows = 5;
+  let firstCheque = state.nextChequeNo || '';
+  for(let i=0;i<startRows;i++){
+    tbody.insertAdjacentHTML('beforeend', withdrawalEntryRowHTML({chequeNo:firstCheque, date:todayISO()}));
+    if(firstCheque){
+      const digits = String(firstCheque).replace(/\D/g,'');
+      firstCheque = digits.length>=4 ? String(BigInt(digits)+1n) : '';
+    }
+  }
+  if(pendingEditRow){
+    tbody.insertAdjacentHTML('afterbegin', withdrawalEntryRowHTML(pendingEditRow));
+    pendingEditRow = null;
+  }
+  tbody.querySelectorAll('tr.entry-row').forEach(bindWithdrawalRowRemove);
+  bindChequeCascade(tbody);
+  bindEnterNavigation(tbody);
+
+  document.getElementById('w-add-row').addEventListener('click', addWithdrawalEntryRow);
+
+  document.getElementById('w-save-all').addEventListener('click', ()=>{
+    const entryRows = document.querySelectorAll('#w-entry-rows tr.entry-row');
+    let savedCount = 0;
+    entryRows.forEach(tr=>{
+      const amount = toNum(tr.querySelector('.we-amount').value);
+      if(amount<=0) return;
+      const chequeNo = tr.querySelector('.we-cheque').value.trim();
+      const payee = tr.querySelector('.we-payee').value.trim();
+      const statement = tr.querySelector('.we-statement').value.trim();
+      const deferVal = tr.querySelector('.we-defer').value;
+      state.withdrawals.push({
+        id: uid(),
+        date: tr.querySelector('.we-date').value || todayISO(),
+        chequeNo,
+        payee,
+        statement,
+        accountKey: tr.querySelector('.we-account').value,
+        amount,
+        deferred: !!deferVal,
+        deferSub: deferVal || null,
+        cleared: false,
+      });
+      if(chequeNo) bumpChequeSequenceFrom(chequeNo);
+      if(payee) rememberPayee(payee);
+      if(statement) rememberStatement(statement);
+      savedCount++;
+    });
+    if(savedCount===0){ alert('اكتب مبلغ في صف واحد على الأقل عشان يتحفظ'); return; }
+    savePeriod();
+    render();
+  });
+
+  document.querySelectorAll('[data-del]').forEach(b=> b.addEventListener('click', ()=>{
+    state.withdrawals = state.withdrawals.filter(w=>w.id!==b.dataset.del);
+    savePeriod(); render();
+  }));
+  document.querySelectorAll('[data-edit]').forEach(b=> b.addEventListener('click', ()=> editWithdrawal(b.dataset.edit)));
+}
+let pendingEditRow = null;
+function editWithdrawal(id){
+  const idx = state.withdrawals.findIndex(w=>w.id===id);
+  if(idx===-1) return;
+  pendingEditRow = state.withdrawals[idx];
+  state.withdrawals.splice(idx,1);
+  savePeriod();
+  render();
+}
+
+/* ============================= DEPOSITS TAB ============================= */
+function renderDepositsTab(){
+  const byType = depositTotalsByType();
+  const byBranch = depositBranchTotals();
+  const total = sumVals(byType);
+
+  const rows = state.deposits.slice().sort((a,b)=> (a.date<b.date?1:-1)).map(d=>`
+    <tr>
+      <td>${d.date||'—'}</td>
+      <td>${dtMap[d.type]?dtMap[d.type].label:'—'}</td>
+      <td>${d.type==='branch'? (d.branch||'—') : '—'}</td>
+      <td>${d.note||'—'}</td>
+      <td class="num">${fmt(d.amount)}</td>
+      <td><button class="del-btn" data-del="${d.id}">✕</button></td>
+    </tr>`).join('');
+
+  return `
+  <div class="panel">
+    <h2>إضافة إيداعات</h2>
+    <p class="desc">اختار "إيداعات الفروع" لو التحصيل يومي من فرع، أو نوع الحساب المناسب لباقي الإيداعات.</p>
+    <div class="form-grid">
+      <div class="field"><label>التاريخ</label><input type="date" id="d-date"></div>
+      <div class="field" style="min-width:200px;">
+        <label>نوع الإيداع</label>
+        <select id="d-type">${DEPOSIT_TYPES.map(t=>`<option value="${t.key}">${t.label} (${t.code})</option>`).join('')}</select>
+      </div>
+      <div class="field" id="d-branch-wrap" style="min-width:170px;">
+        <label>الفرع</label>
+        <select id="d-branch">${BRANCHES.map(b=>`<option value="${b}">${b}</option>`).join('')}</select>
+      </div>
+      <div class="field"><label>ملاحظة</label><input type="text" id="d-note" placeholder="اختياري"></div>
+      <div class="field"><label>المبلغ</label><input type="number" step="0.01" id="d-amount" placeholder="0.00"></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-primary" id="d-add">+ إضافة إيداع</button></div>
+  </div>
+
+  <div class="cards">
+    <div class="card debit"><div class="k">إجمالي الإيداعات</div><div class="v">${fmt(total)}</div></div>
+    <div class="card"><div class="k">إيداعات الفروع</div><div class="v">${fmt(byType.branch)}</div></div>
+    <div class="card credit"><div class="k">شيكات محصّلة</div><div class="v">${fmt(byType.collected_cheques)}</div></div>
+  </div>
+
+  <div class="panel">
+    <h2>سجل الإيداعات — ${periodLabel(state.period)}</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>التاريخ</th><th>النوع</th><th>الفرع</th><th>ملاحظة</th><th>المبلغ</th><th></th></tr></thead>
+      <tbody>${rows || `<tr><td colspan="6" class="empty-note">لسه مفيش إيداعات مُدخلة</td></tr>`}</tbody>
+    </table></div>
+  </div>
+
+  <div class="panel">
+    <h2>إجمالي الإيداعات حسب الفرع</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>الفرع</th><th>الإجمالي</th></tr></thead>
+      <tbody>
+      ${BRANCHES.map(b=>`<tr><td>${b}</td><td class="num">${fmt(byBranch[b])}</td></tr>`).join('')}
+      <tr class="tot-row"><td>الإجمالي</td><td class="num">${fmt(sumVals(byBranch))}</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+  `;
+}
+function bindDepositsTab(){
+  const typeSel = document.getElementById('d-type');
+  const branchWrap = document.getElementById('d-branch-wrap');
+  function syncBranch(){ branchWrap.style.display = typeSel.value==='branch' ? 'flex':'none'; }
+  typeSel.addEventListener('change', syncBranch); syncBranch();
+
+  document.getElementById('d-add').addEventListener('click', ()=>{
+    const amount = toNum(document.getElementById('d-amount').value);
+    if(amount<=0){ alert('من فضلك أدخل مبلغ صحيح'); return; }
+    state.deposits.push({
+      id: uid(),
+      date: document.getElementById('d-date').value,
+      type: typeSel.value,
+      branch: typeSel.value==='branch'? document.getElementById('d-branch').value : null,
+      note: document.getElementById('d-note').value.trim(),
+      amount,
+    });
+    savePeriod(); render();
+  });
+  document.querySelectorAll('[data-del]').forEach(b=> b.addEventListener('click', ()=>{
+    state.deposits = state.deposits.filter(d=>d.id!==b.dataset.del);
+    savePeriod(); render();
+  }));
+}
+
+/* ============================= NOTES (اوراق الدفع) TAB ============================= */
+function renderNotesTab(){
+  const deferred = deferredWithdrawals();
+  const deferredTotal = deferred.reduce((s,w)=>s+toNum(w.amount),0);
+  const termTotal = deferred.filter(w=>w.deferSub==='term').reduce((s,w)=>s+toNum(w.amount),0);
+  const dueTotal = deferred.filter(w=>w.deferSub==='due').reduce((s,w)=>s+toNum(w.amount),0);
+
+  const notesRows = state.notesDrawn.slice().sort((a,b)=> (a.date<b.date?1:-1)).map(n=>`
+    <tr>
+      <td>${n.date||'—'}</td>
+      <td class="num">${n.chequeNo||'—'}</td>
+      <td>${n.payee||'—'}</td>
+      <td>${n.statement||'—'}</td>
+      <td class="num">${fmt(n.amount)}</td>
+      <td><button class="del-btn" data-del="${n.id}">✕</button></td>
+    </tr>`).join('');
+  const notesDrawnTotal = state.notesDrawn.reduce((s,n)=>s+toNum(n.amount),0);
+
+  const deferredRows = deferred.map(w=>`
+    <tr><td>${w.date||'—'}</td><td class="num">${w.chequeNo||'—'}</td><td>${w.payee||'—'}</td><td>${w.statement||'—'}</td><td>${w.deferSub==='due'?'استحقاق':'أجل'}</td><td class="num">${fmt(w.amount)}</td></tr>
+  `).join('');
+
+  return `
+  <div class="section-divider">أوراق دفع جديدة (شيكات مؤجّلة هذا الشهر)</div>
+  <div class="panel">
+    <p class="desc">القائمة دي بتتولد تلقائيًا من الشيكات اللي علّمتها "مؤجل لأوراق الدفع" في تبويب المسحوبات.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>التاريخ</th><th>رقم الشيك</th><th>لأمر</th><th>بيان</th><th>النوع</th><th>المبلغ</th></tr></thead>
+      <tbody>${deferredRows || `<tr><td colspan="6" class="empty-note">لا توجد شيكات مؤجلة هذا الشهر</td></tr>`}</tbody>
+    </table></div>
+    <div class="cards" style="margin-top:14px;">
+      <div class="card"><div class="k">أجل (2811)</div><div class="v">${fmt(termTotal)}</div></div>
+      <div class="card"><div class="k">استحقاقات (2812)</div><div class="v">${fmt(dueTotal)}</div></div>
+      <div class="card credit"><div class="k">إجمالي أوراق الدفع الجديدة</div><div class="v">${fmt(deferredTotal)}</div></div>
+    </div>
+  </div>
+
+  <div class="section-divider">مسحوبات أوراق الدفع (شيكات مؤجلة تم صرفها هذا الشهر)</div>
+  <div class="panel">
+    <h2>إضافة شيك مسحوب من أوراق الدفع</h2>
+    <p class="desc">شيكات كانت مؤجّلة في شهر سابق، ودلوقتي اتسحبت فعليًا من البنك.</p>
+    <datalist id="payee-list">${state.knownPayees.map(p=>`<option value="${p.replace(/"/g,'&quot;')}">`).join('')}</datalist>
+    <datalist id="statement-list">${state.knownStatements.map(s=>`<option value="${s.replace(/"/g,'&quot;')}">`).join('')}</datalist>
+    <div class="form-grid">
+      <div class="field"><label>التاريخ</label><input type="date" id="n-date"></div>
+      <div class="field"><label>رقم الشيك</label><input type="text" id="n-cheque"></div>
+      <div class="field"><label>لأمر (المستفيد)</label><input type="text" id="n-payee" list="payee-list" autocomplete="off"></div>
+      <div class="field"><label>بيان</label><input type="text" id="n-statement" list="statement-list" autocomplete="off"></div>
+      <div class="field"><label>المبلغ</label><input type="number" step="0.01" id="n-amount"></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-primary" id="n-add">+ إضافة</button></div>
+  </div>
+  <div class="panel">
+    <div class="table-wrap"><table>
+      <thead><tr><th>التاريخ</th><th>رقم الشيك</th><th>لأمر</th><th>بيان</th><th>المبلغ</th><th></th></tr></thead>
+      <tbody>${notesRows || `<tr><td colspan="6" class="empty-note">لسه مفيش مسحوبات أوراق دفع</td></tr>`}</tbody>
+    </table></div>
+    <div class="cards" style="margin-top:14px;">
+      <div class="card debit"><div class="k">إجمالي مسحوبات أوراق الدفع</div><div class="v">${fmt(notesDrawnTotal)}</div></div>
+    </div>
+  </div>
+  `;
+}
+function bindNotesTab(){
+  document.getElementById('n-add').addEventListener('click', ()=>{
+    const amount = toNum(document.getElementById('n-amount').value);
+    if(amount<=0){ alert('من فضلك أدخل مبلغ صحيح'); return; }
+    const chequeNo = document.getElementById('n-cheque').value.trim();
+    const payee = document.getElementById('n-payee').value.trim();
+    const statement = document.getElementById('n-statement').value.trim();
+    state.notesDrawn.push({
+      id: uid(),
+      date: document.getElementById('n-date').value,
+      chequeNo,
+      payee,
+      statement,
+      amount,
+    });
+    if(payee) rememberPayee(payee);
+    if(statement) rememberStatement(statement);
+    savePeriod(); render();
+  });
+  document.querySelectorAll('[data-del]').forEach(b=> b.addEventListener('click', ()=>{
+    state.notesDrawn = state.notesDrawn.filter(n=>n.id!==b.dataset.del);
+    savePeriod(); render();
+  }));
+}
+
+/* ============================= BANK STATEMENT RECONCILE TAB ============================= */
+if(window.pdfjsLib){
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+async function extractPdfLines(file){
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+  const lines = [];
+  for(let p=1; p<=pdf.numPages; p++){
+    const page = await pdf.getPage(p);
+    const content = await page.getTextContent();
+    // group items by approximate vertical position (row)
+    const rows = {};
+    content.items.forEach(it=>{
+      const y = Math.round(it.transform[5]);
+      const key = Math.round(y/3)*3; // tolerance
+      if(!rows[key]) rows[key] = [];
+      rows[key].push({x: it.transform[4], str: it.str});
+    });
+    const ys = Object.keys(rows).map(Number).sort((a,b)=>b-a);
+    ys.forEach(y=>{
+      const row = rows[y].sort((a,b)=>a.x-b.x);
+      const text = row.map(r=>r.str).join(' ').replace(/\s+/g,' ').trim();
+      if(text) lines.push(text);
+    });
+  }
+  return lines;
+}
+
+function parseStatementLine(text){
+  const cleaned = text.replace(/[,\u066c]/g,''); // remove thousands separators (incl Arabic)
+  const chequeMatches = cleaned.match(/\b\d{8,14}\b/g) || [];
+  const chequeNo = chequeMatches.sort((a,b)=>b.length-a.length)[0] || '';
+  const dateMatch = text.match(/\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/);
+  const date = dateMatch ? dateMatch[0] : '';
+  const amountMatches = cleaned.match(/\d+\.\d{2}\b/g) || cleaned.match(/\b\d{2,9}\b/g) || [];
+  // prefer decimal amounts; exclude the cheque number itself
+  let amount = 0;
+  const decimals = (cleaned.match(/\d+\.\d{2}\b/g)||[]).filter(v=>v!==chequeNo);
+  if(decimals.length){ amount = toNum(decimals[decimals.length-1]); }
+  else {
+    const nums = (cleaned.match(/\b\d{2,9}\b/g)||[]).filter(v=>v!==chequeNo && v!==date.replace(/[\/\-]/g,''));
+    if(nums.length) amount = toNum(nums[nums.length-1]);
+  }
+  let type = 'unknown';
+  if(/عمول/.test(text)) type='commission';
+  else if(/تحويل/.test(text)) type='transfer';
+  else if(/مصروف|رسوم|رسم/.test(text)) type='expense';
+  else if(chequeNo.length>=9) type='cheque';
+  return {raw:text, chequeNo, date, amount, type};
+}
+
+function renderReconcileTab(){
+  const recorded = state.withdrawals.filter(w=>w.chequeNo);
+  const statementChequeNos = new Set(statementLines.filter(l=>l.chequeNo).map(l=>l.chequeNo));
+  const matched = recorded.filter(w=> statementChequeNos.has(w.chequeNo));
+  const unmatched = recorded.filter(w=> !statementChequeNos.has(w.chequeNo) && !w.deferred);
+  const recordedChequeNos = new Set(recorded.map(w=>w.chequeNo));
+  const unrecordedLines = statementLines.filter(l=> l.chequeNo ? !recordedChequeNos.has(l.chequeNo) : true)
+                                          .filter(l=> l.amount>0);
+
+  const typeLabel = {commission:'عمولة', transfer:'تحويل', expense:'مصروفات', cheque:'شيك', unknown:'غير محدد'};
+
+  return `
+  <div class="panel">
+    <h2>رفع كشف الحساب البنكي (PDF)</h2>
+    <p class="desc">هيتم مطابقة الشيكات المسجّلة مع كشف الحساب برقم الشيك. اللي متسجل عندك ومش لاقيه في الكشف هيتحول لأوراق دفع. واللي في الكشف ومش مسجل عندك (مصاريف / عمولات / تحويلات) هيظهرلك تحت عشان تضيفه.</p>
+    <div class="form-grid">
+      <div class="field" style="grid-column:1/-1;">
+        <label>ملف كشف الحساب (PDF)</label>
+        <input type="file" id="stmt-file" accept="application/pdf">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="stmt-parse">📄 قراءة الملف ومطابقة</button>
+      ${statementLines.length? `<span style="color:var(--text-dim);font-size:12.5px;align-self:center;">تم استخراج ${statementLines.length} سطر من "${statementFileName}"</span>`:''}
+    </div>
+    <div id="stmt-status" style="margin-top:10px;color:var(--text-dim);font-size:12.5px;"></div>
+  </div>
+
+  ${statementLines.length ? `
+  <div class="cards">
+    <div class="card credit"><div class="k">شيكات مطابقة (تم صرفها فعليًا)</div><div class="v">${matched.length}</div></div>
+    <div class="card"><div class="k">شيكات مسجّلة ولسه ماتسحبتش</div><div class="v">${unmatched.length}</div></div>
+    <div class="card debit"><div class="k">بنود بالكشف مش مسجّلة عندك</div><div class="v">${unrecordedLines.length}</div></div>
+  </div>
+
+  <div class="panel">
+    <h2>✓ شيكات مطابقة — تم صرفها فعليًا من البنك</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>رقم الشيك</th><th>لأمر</th><th>المبلغ</th><th>الحالة</th></tr></thead>
+      <tbody>${matched.map(w=>`<tr><td class="num">${w.chequeNo}</td><td>${w.payee||'—'}</td><td class="num">${fmt(w.amount)}</td><td>${w.cleared? '✓ مؤكد':'<button class=\"btn btn-ghost\" data-confirm=\"'+w.id+'\" style=\"padding:4px 10px;font-size:11.5px;\">تأكيد</button>'}</td></tr>`).join('') || `<tr><td colspan="4" class="empty-note">لا يوجد تطابق</td></tr>`}</tbody>
+    </table></div>
+    ${matched.some(w=>!w.cleared) ? `<div class="btn-row"><button class="btn btn-ghost" id="confirm-all">تأكيد كل الشيكات المطابقة</button></div>`:''}
+  </div>
+
+  <div class="panel">
+    <h2>⏳ شيكات مسجّلة ولسه ماتسحبتش من البنك</h2>
+    <p class="desc">دول هيتحولوا لأوراق دفع (تظهر في تبويب "أوراق الدفع").</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>رقم الشيك</th><th>لأمر</th><th>المبلغ</th><th></th></tr></thead>
+      <tbody>${unmatched.map(w=>`<tr><td class="num">${w.chequeNo}</td><td>${w.payee||'—'}</td><td class="num">${fmt(w.amount)}</td><td><button class="btn btn-ghost" data-defer="${w.id}" style="padding:4px 10px;font-size:11.5px;">ترحيل كورقة دفع</button></td></tr>`).join('') || `<tr><td colspan="4" class="empty-note">كل الشيكات المسجّلة اتصرفت</td></tr>`}</tbody>
+    </table></div>
+    ${unmatched.length? `<div class="btn-row"><button class="btn btn-primary" id="defer-all">ترحيل الكل كأوراق دفع</button></div>`:''}
+  </div>
+
+  <div class="panel">
+    <h2>＋ بنود في كشف الحساب مش مسجّلة عندك</h2>
+    <p class="desc">مصاريف وعمولات وتحويلات بنكية ظهرت في الكشف ومسجلتهاش في البرنامج — راجعها وأضف اللي يخصك.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>النوع المحتمل</th><th>تاريخ</th><th>مرجع</th><th>المبلغ</th><th>نص السطر</th><th></th></tr></thead>
+      <tbody>${unrecordedLines.map((l,i)=>`
+        <tr>
+          <td>${typeLabel[l.type]}</td>
+          <td class="num">${l.date||'—'}</td>
+          <td class="num">${l.chequeNo||'—'}</td>
+          <td class="num">${fmt(l.amount)}</td>
+          <td style="max-width:260px;white-space:normal;color:var(--text-faint);font-size:11.5px;">${l.raw}</td>
+          <td><button class="btn btn-ghost" data-addline="${i}" style="padding:4px 10px;font-size:11.5px;">+ إضافة</button></td>
+        </tr>`).join('') || `<tr><td colspan="6" class="empty-note">مفيش بنود جديدة</td></tr>`}</tbody>
+    </table></div>
+  </div>
+  ` : ''}
+  `;
+}
+
+function bindReconcileTab(){
+  document.getElementById('stmt-parse').addEventListener('click', async ()=>{
+    const fileInput = document.getElementById('stmt-file');
+    const file = fileInput.files[0];
+    const statusEl = document.getElementById('stmt-status');
+    if(!file){ statusEl.textContent='من فضلك اختار ملف PDF الأول.'; return; }
+    statusEl.textContent='جاري قراءة الملف…';
+    try{
+      statementLines = (await extractPdfLines(file)).map(parseStatementLine);
+      statementFileName = file.name;
+      statusEl.textContent = `تم استخراج ${statementLines.length} سطر بنجاح.`;
+    }catch(e){
+      console.error(e);
+      statusEl.textContent = 'حصل خطأ في قراءة الملف. تأكد إنه PDF نصي (مش صورة ممسوحة ضوئيًا).';
+    }
+    render();
+  });
+
+  document.querySelectorAll('[data-confirm]').forEach(b=> b.addEventListener('click', ()=>{
+    const w = state.withdrawals.find(x=>x.id===b.dataset.confirm);
+    if(w) w.cleared = true;
+    savePeriod(); render();
+  }));
+  const confirmAll = document.getElementById('confirm-all');
+  if(confirmAll) confirmAll.addEventListener('click', ()=>{
+    const statementChequeNos = new Set(statementLines.filter(l=>l.chequeNo).map(l=>l.chequeNo));
+    state.withdrawals.forEach(w=>{ if(statementChequeNos.has(w.chequeNo)) w.cleared = true; });
+    savePeriod(); render();
+  });
+
+  document.querySelectorAll('[data-defer]').forEach(b=> b.addEventListener('click', ()=>{
+    const w = state.withdrawals.find(x=>x.id===b.dataset.defer);
+    if(w){ w.deferred = true; w.deferSub = w.deferSub || 'term'; }
+    savePeriod(); render();
+  }));
+  const deferAll = document.getElementById('defer-all');
+  if(deferAll) deferAll.addEventListener('click', ()=>{
+    const statementChequeNos = new Set(statementLines.filter(l=>l.chequeNo).map(l=>l.chequeNo));
+    state.withdrawals.forEach(w=>{ if(w.chequeNo && !statementChequeNos.has(w.chequeNo) && !w.deferred){ w.deferred=true; w.deferSub = w.deferSub||'term'; } });
+    savePeriod(); render();
+  });
+
+  document.querySelectorAll('[data-addline]').forEach(b=> b.addEventListener('click', ()=>{
+    const recordedChequeNos = new Set(state.withdrawals.filter(w=>w.chequeNo).map(w=>w.chequeNo));
+    const unrecordedLines = statementLines.filter(l=> l.chequeNo ? !recordedChequeNos.has(l.chequeNo) : true).filter(l=>l.amount>0);
+    const l = unrecordedLines[Number(b.dataset.addline)];
+    if(!l) return;
+    const accKey = l.type==='commission' ? 'expenses' : l.type==='transfer' ? 'transfers' : l.type==='expense' ? 'expenses' : 'other_creditors';
+    state.withdrawals.push({
+      id: uid(), date:'', chequeNo: l.chequeNo||'', payee:'', statement: l.raw.slice(0,60),
+      accountKey: accKey, amount: l.amount, deferred:false, deferSub:null, cleared:true,
+    });
+    savePeriod(); render();
+  }));
+}
+
+/* ============================= FULL REPORT TAB ============================= */
+function buildReportModel(){
+  const net = columnTotals(activeWithdrawals());
+  const totalNet = sumVals(net);
+  const byType = depositTotalsByType();
+  const totalDeposits = sumVals(byType);
+  const deferred = deferredWithdrawals();
+  const deferredTotal = deferred.reduce((s,w)=>s+toNum(w.amount),0);
+  const termTotal = deferred.filter(w=>w.deferSub==='term').reduce((s,w)=>s+toNum(w.amount),0);
+  const dueTotal = deferred.filter(w=>w.deferSub==='due').reduce((s,w)=>s+toNum(w.amount),0);
+  const notesDrawnTotal = state.notesDrawn.reduce((s,n)=>s+toNum(n.amount),0);
+  return {net,totalNet,byType,totalDeposits,deferred,deferredTotal,termTotal,dueTotal,notesDrawnTotal};
+}
+
+function renderReportTab(){
+  const m = buildReportModel();
+  const title = `خلال شهر ${periodLabel(state.period)}`;
+  return `
+  <div class="btn-row no-print" style="margin-bottom:14px;">
+    <button class="btn btn-ghost" id="print-btn">🖨️ طباعة / PDF</button>
+  </div>
+
+  <div class="stmt">
+    ${stmtHead('تسويه ايداعات '+BANK_NAME+' ح/ '+ACCOUNT_NO+' '+title)}
+    <table class="jr-table">
+      <thead><tr><th style="width:14%">منه</th><th style="width:14%">له</th><th style="width:14%">مفردات</th><th>بيان</th><th style="width:10%">دليل محاسبى</th></tr></thead>
+      <tbody>
+        <tr><td class="num">${fmt(m.totalDeposits)}</td><td></td><td></td><td>من حـ/ حسابات جارية بالبنوك</td><td class="num">12821</td></tr>
+        <tr><td></td><td></td><td></td><td class="indent">إيداعات</td><td></td></tr>
+        <tr><td></td><td></td><td></td><td>الى مذكورين</td><td></td></tr>
+        <tr><td></td><td class="num">${fmt(m.byType.wages)}</td><td></td><td class="indent">حـ/ الأجور</td><td class="num">412</td></tr>
+        <tr><td></td><td class="num">${fmt(m.byType.other_revenue)}</td><td></td><td class="indent">حـ/ إيرادات وأرباح أخرى</td><td class="num">5126</td></tr>
+        <tr><td></td><td class="num">${fmt(m.byType.customers)}</td><td></td><td class="indent">حـ/ العملاء</td><td class="num">123111</td></tr>
+        <tr><td></td><td class="num">${fmt(m.byType.other_debtors)}</td><td></td><td class="indent">حـ/ حسابات مدينة أخرى</td><td class="num">1237</td></tr>
+        <tr><td></td><td class="num">${fmt(m.byType.branch+m.byType.collected_cheques)}</td><td></td><td class="indent">حـ/ حسابات جارية بالبنوك</td><td class="num">12821</td></tr>
+        <tr><td></td><td></td><td class="num">${fmt(m.byType.branch)}</td><td class="indent">— إيداعات الفروع</td><td></td></tr>
+        <tr><td></td><td></td><td class="num">${fmt(m.byType.collected_cheques)}</td><td class="indent">— شيكات محصّلة</td><td></td></tr>
+        <tr><td></td><td class="num">${fmt(m.byType.other_creditors)}</td><td></td><td class="indent">حـ/ حسابات دائنة أخرى</td><td class="num">329</td></tr>
+        <tr><td></td><td class="num">${fmt(m.byType.suspense)}</td><td></td><td class="indent">حـ/ تحت التسوية</td><td class="num">3294</td></tr>
+        <tr class="grand"><td class="num">${fmt(m.totalDeposits)}</td><td class="num">${fmt(m.totalDeposits)}</td><td></td><td>إجمالي إيداعات ${BANK_NAME} ح/${ACCOUNT_NO}</td><td></td></tr>
+      </tbody>
+    </table>
+    ${stmtSign()}
+  </div>
+
+  <div class="stmt">
+    ${stmtHead('مسحوبات '+BANK_NAME+' ح/ '+ACCOUNT_NO+' '+title)}
+    <table class="jr-table">
+      <thead><tr><th style="width:14%">منه</th><th style="width:14%">له</th><th>بيان</th><th style="width:10%">دليل محاسبى</th></tr></thead>
+      <tbody>
+        <tr><td></td><td></td><td>من مذكورين</td><td></td></tr>
+        ${WITHDRAWAL_ACCOUNTS.map(a=>`<tr><td class="num">${fmt(m.net[a.key])}</td><td></td><td class="indent">${a.label}</td><td class="num">${a.code}</td></tr>`).join('')}
+        <tr><td></td><td class="num">${fmt(m.totalNet)}</td><td>الى حـ/ حسابات جارية بالبنوك — مسحوبات</td><td class="num">12821</td></tr>
+        <tr class="grand"><td class="num">${fmt(m.totalNet)}</td><td class="num">${fmt(m.totalNet)}</td><td>إجمالي مسحوبات ${BANK_NAME} ح/${ACCOUNT_NO}</td><td></td></tr>
+      </tbody>
+    </table>
+    ${stmtSign()}
+  </div>
+
+  <div class="stmt">
+    ${stmtHead('تسويه اوراق الدفع '+BANK_NAME+' ح/ '+ACCOUNT_NO+' '+title)}
+    <table class="jr-table">
+      <thead><tr><th style="width:14%">منه</th><th style="width:14%">له</th><th>بيان</th><th style="width:10%">دليل محاسبى</th></tr></thead>
+      <tbody>
+        <tr><td></td><td></td><td>من ح/ موردون</td><td class="num">281</td></tr>
+        <tr><td class="num">${fmt(m.termTotal)}</td><td></td><td class="indent">أجل</td><td class="num">2811</td></tr>
+        <tr><td class="num">${fmt(m.dueTotal)}</td><td></td><td class="indent">استحقاقات</td><td class="num">2812</td></tr>
+        <tr><td></td><td class="num">${fmt(m.deferredTotal)}</td><td>الى ح/ اوراق الدفع</td><td class="num">32412</td></tr>
+        <tr class="grand"><td class="num">${fmt(m.deferredTotal)}</td><td class="num">${fmt(m.deferredTotal)}</td><td>إجمالي شيكات مؤجلة لأوراق الدفع</td><td></td></tr>
+      </tbody>
+    </table>
+    <table class="jr-table" style="margin-top:12px;">
+      <thead><tr><th>تاريخ</th><th>بيان</th><th>لأمر</th><th>رقم الشيك</th><th>المبلغ</th></tr></thead>
+      <tbody>${m.deferred.map(w=>`<tr><td>${w.date||'—'}</td><td>${w.statement||'—'}</td><td>${w.payee||'—'}</td><td class="num">${w.chequeNo||'—'}</td><td class="num">${fmt(w.amount)}</td></tr>`).join('') || `<tr><td colspan="5" class="empty-note">لا يوجد</td></tr>`}</tbody>
+    </table>
+    ${stmtSign()}
+  </div>
+
+  <div class="stmt">
+    ${stmtHead('تسويه مسحوبات اوراق الدفع '+BANK_NAME+' ح/ '+ACCOUNT_NO+' '+title)}
+    <table class="jr-table">
+      <thead><tr><th style="width:14%">منه</th><th style="width:14%">له</th><th>بيان</th><th style="width:10%">دليل محاسبى</th></tr></thead>
+      <tbody>
+        <tr><td class="num">${fmt(m.notesDrawnTotal)}</td><td></td><td>من ح/ اوراق الدفع</td><td class="num">32412</td></tr>
+        <tr><td></td><td class="num">${fmt(m.notesDrawnTotal)}</td><td>الى حـ/ حسابات جارية بالبنوك — مسحوبات</td><td class="num">12821</td></tr>
+        <tr class="grand"><td class="num">${fmt(m.notesDrawnTotal)}</td><td class="num">${fmt(m.notesDrawnTotal)}</td><td>إجمالي شيكات تم سحبها من أوراق الدفع</td><td></td></tr>
+      </tbody>
+    </table>
+    <table class="jr-table" style="margin-top:12px;">
+      <thead><tr><th>تاريخ</th><th>بيان</th><th>لأمر</th><th>رقم الشيك</th><th>المبلغ</th></tr></thead>
+      <tbody>${state.notesDrawn.map(n=>`<tr><td>${n.date||'—'}</td><td>${n.statement||'—'}</td><td>${n.payee||'—'}</td><td class="num">${n.chequeNo||'—'}</td><td class="num">${fmt(n.amount)}</td></tr>`).join('') || `<tr><td colspan="5" class="empty-note">لا يوجد</td></tr>`}</tbody>
+    </table>
+    ${stmtSign()}
+  </div>
+
+  <div class="cards">
+    <div class="card debit"><div class="k">إجمالي الإيداعات</div><div class="v">${fmt(m.totalDeposits)}</div></div>
+    <div class="card credit"><div class="k">إجمالي المسحوبات (صافي)</div><div class="v">${fmt(m.totalNet)}</div></div>
+    <div class="card balance"><div class="k">صافي حركة البنك هذا الشهر</div><div class="v">${fmt(m.totalDeposits - m.totalNet - m.notesDrawnTotal)}</div></div>
+  </div>
+  `;
+}
+function stmtHead(title){
+  return `<div class="stmt-head">
+    <div class="co">${COMPANY}</div>
+    <div class="sec">${SECTOR} — اذن تسوية رقم / ......</div>
+    <div class="ttl">${title}</div>
+  </div>`;
+}
+function stmtSign(){
+  return `<div class="sign-row">
+    <span>المختص: ${SIGNER}</span>
+    <span>مدير الادارة</span>
+    <span>المدير العام</span>
+  </div>`;
+}
+
+/* ============================= EXPORT TAB ============================= */
+function renderExportTab(){
+  return `
+  <div class="panel">
+    <h2>تصدير التقرير</h2>
+    <p class="desc">نزّل التسوية الشهرية الكاملة كملف إكسيل بنفس شكل السجلات الأصلية، أو اطبعها PDF من تبويب "التقرير الشهري الكامل".</p>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="export-xlsx">⬇ تحميل Excel</button>
+    </div>
+  </div>
+  <div class="panel">
+    <h2>إدارة البيانات</h2>
+    <p class="desc">مسح كل بيانات شهر ${periodLabel(state.period)} (المسحوبات، الإيداعات، أوراق الدفع). العملية دي مش قابلة للتراجع.</p>
+    <div class="btn-row"><button class="btn btn-danger" id="clear-period">🗑 مسح بيانات هذا الشهر بالكامل</button></div>
+  </div>
+  `;
+}
+function bindExportTab(){
+  document.getElementById('export-xlsx').addEventListener('click', exportExcel);
+  document.getElementById('clear-period').addEventListener('click', ()=>{
+    if(confirm('متأكد إنك عايز تمسح كل بيانات الشهر ده؟')){
+      state.withdrawals=[]; state.deposits=[]; state.notesDrawn=[];
+      savePeriod(); render();
+    }
+  });
+}
+
+function exportExcel(){
+  const wb = XLSX.utils.book_new();
+  // مسحوبات
+  const wRows = [['التاريخ','رقم الشيك','لأمر','بيان','التصنيف','الكود','المبلغ','مؤجل لأوراق الدفع']];
+  state.withdrawals.forEach(w=> wRows.push([w.date,w.chequeNo,w.payee,w.statement, waMap[w.accountKey]?waMap[w.accountKey].label:'', waMap[w.accountKey]?waMap[w.accountKey].code:'', w.amount, w.deferred? (w.deferSub==='due'?'مؤجل - استحقاق':'مؤجل - أجل') : '']));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(wRows), 'مسحوبات');
+
+  // ايداعات
+  const dRows = [['التاريخ','النوع','الكود','الفرع','ملاحظة','المبلغ']];
+  state.deposits.forEach(d=> dRows.push([d.date, dtMap[d.type]?dtMap[d.type].label:'', dtMap[d.type]?dtMap[d.type].code:'', d.branch||'', d.note||'', d.amount]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dRows), 'ايداعات');
+
+  // اوراق الدفع - جديد
+  const deferred = deferredWithdrawals();
+  const nRows = [['التاريخ','رقم الشيك','لأمر','بيان','النوع','المبلغ']];
+  deferred.forEach(w=> nRows.push([w.date,w.chequeNo,w.payee,w.statement, w.deferSub==='due'?'استحقاق':'أجل', w.amount]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(nRows), 'اوراق الدفع - جديد');
+
+  // اوراق الدفع - مسحوب
+  const ndRows = [['التاريخ','رقم الشيك','لأمر','بيان','المبلغ']];
+  state.notesDrawn.forEach(n=> ndRows.push([n.date,n.chequeNo,n.payee,n.statement,n.amount]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(ndRows), 'اوراق الدفع - مسحوب');
+
+  // التسوية الرئيسية (ملخص القيود)
+  const m = buildReportModel();
+  const sRows = [['البيان','دليل محاسبى','منه','له']];
+  sRows.push(['من حـ/ حسابات جارية بالبنوك (إيداعات)','12821', m.totalDeposits, '']);
+  sRows.push(['حـ/ الأجور','412','', m.byType.wages]);
+  sRows.push(['حـ/ إيرادات وأرباح أخرى','5126','', m.byType.other_revenue]);
+  sRows.push(['حـ/ العملاء','123111','', m.byType.customers]);
+  sRows.push(['حـ/ حسابات مدينة أخرى','1237','', m.byType.other_debtors]);
+  sRows.push(['إيداعات الفروع + شيكات محصلة','12821','', m.byType.branch+m.byType.collected_cheques]);
+  sRows.push(['حـ/ حسابات دائنة أخرى','329','', m.byType.other_creditors]);
+  sRows.push(['حـ/ تحت التسوية','3294','', m.byType.suspense]);
+  sRows.push(['', '', '', '']);
+  WITHDRAWAL_ACCOUNTS.forEach(a=> sRows.push([a.label, a.code, m.net[a.key], '']));
+  sRows.push(['الى حـ/ حسابات جارية بالبنوك — مسحوبات','12821','', m.totalNet]);
+  sRows.push(['', '', '', '']);
+  sRows.push(['من ح/ موردون (أجل+استحقاق)','281', m.deferredTotal, '']);
+  sRows.push(['الى ح/ اوراق الدفع','32412','', m.deferredTotal]);
+  sRows.push(['', '', '', '']);
+  sRows.push(['من ح/ اوراق الدفع','32412', m.notesDrawnTotal, '']);
+  sRows.push(['الى حـ/ حسابات جارية بالبنوك — مسحوبات','12821','', m.notesDrawnTotal]);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sRows), 'التسوية الرئيسية');
+
+  XLSX.writeFile(wb, `تسويه_${ACCOUNT_NO}_${periodLabel(state.period).replace(' ','_')}.xlsx`);
+}
+
+document.getElementById('print-btn') && document.getElementById('print-btn').addEventListener('click', ()=>window.print());
+document.addEventListener('click', (e)=>{ if(e.target && e.target.id==='print-btn') window.print(); });
+
+/* ============================= BOOT ============================= */
+init();
+</script>
+</body>
+</html>
